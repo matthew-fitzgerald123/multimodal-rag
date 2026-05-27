@@ -1,0 +1,37 @@
+# Claude
+.claude
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+
+# Env
+.env
+*.env
+
+# Virtual envs
+venv/
+.venv/
+
+# ML artifacts
+*.pkl
+*.pt
+*.safetensors
+mlruns/
+chroma_db/
+
+# macOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
