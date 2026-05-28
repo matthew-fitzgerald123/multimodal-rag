@@ -1,0 +1,18 @@
+Introduction to Machine Learning in Finance
+
+Machine learning models are increasingly used in quantitative finance for tasks such as price prediction, risk management, and portfolio optimisation.
+
+Candlestick Charts
+A candlestick chart is a financial chart type that displays the open, high, low, and close prices for a security during a given time period. Each candlestick represents one time period. The body shows the difference between open and close, while the wicks show the high and low. Bullish candlesticks are typically green; bearish candlesticks are red.
+
+AUC-ROC Score
+The Area Under the Receiver Operating Characteristic Curve (AUC-ROC) is a performance metric for binary classification models. It measures the model's ability to discriminate between positive and negative classes. A score of 1.0 indicates perfect classification; 0.5 is no better than random guessing.
+
+Precision and Recall
+Precision is the fraction of predicted positives that are true positives. Recall (sensitivity) is the fraction of actual positives correctly identified. There is often a trade-off between the two, visualised in a precision-recall curve. The F1 score is the harmonic mean of precision and recall.
+
+EBITDA
+EBITDA stands for Earnings Before Interest, Taxes, Depreciation, and Amortisation. It is a commonly used proxy for operating cash flow and is used to compare profitability across companies with different capital structures.
+
+P/E Ratio
+The price-to-earnings (P/E) ratio is a valuation metric calculated as share price divided by earnings per share. A high P/E may indicate growth expectations or overvaluation; a low P/E may indicate value or declining prospects.

@@ -1,0 +1,16 @@
+Machine Learning Evaluation Metrics
+
+Classification Metrics
+Accuracy measures the fraction of correct predictions across all classes. It is misleading when classes are imbalanced. For imbalanced datasets, precision, recall, and F1 score are preferred.
+
+Confusion Matrix
+A confusion matrix shows the counts of true positives (TP), true negatives (TN), false positives (FP), and false negatives (FN) for a classifier. From these four values, all other classification metrics can be derived.
+
+Mean Squared Error
+Mean Squared Error (MSE) is a common regression metric. It computes the average squared difference between predicted and actual values. Root Mean Squared Error (RMSE) is the square root of MSE and is in the same units as the target variable.
+
+Cross-Validation
+Cross-validation is a model evaluation technique that partitions the training set into k folds. The model is trained on k-1 folds and tested on the remaining fold, rotating until all folds have been used as the test set. This reduces variance in the evaluation estimate.
+
+Overfitting and Underfitting
+Overfitting occurs when a model performs well on training data but poorly on unseen data. Underfitting occurs when the model is too simple to capture the underlying pattern. Regularisation techniques such as L1 and L2 penalties reduce overfitting.

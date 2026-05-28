@@ -39,7 +39,7 @@ class QueryReq(BaseModel):
 def query(req: QueryReq, db: Session = Depends(get_db)):
     total = vector_store.count()
     if total == 0:
-        raise HTTPException(400, "No documents indexed — run: make ingest-docs and make ingest-images")
+        raise HTTPException(400, "No documents indexed. Run: make ingest-docs and make ingest-images")
 
     chunks = vector_store.query(req.query, top_k=req.top_k, modality=req.modality)
     if not chunks:

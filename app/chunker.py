@@ -39,7 +39,7 @@ def chunk_text(
 
 def chunk_image(doc_id: str, caption: str, metadata: dict) -> list[Chunk]:
     """
-    Images are stored as a single chunk — their caption.
+    Images are stored as a single chunk (the caption).
     The caption IS the searchable content.
     """
     return [Chunk(

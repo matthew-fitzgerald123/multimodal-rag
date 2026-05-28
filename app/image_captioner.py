@@ -27,7 +27,7 @@ def caption_image(image_path: str) -> str:
     Design choice: we use the LLM to describe images in text rather than
     using CLIP-style joint embeddings. This avoids torch dependency entirely
     and produces richer, more searchable descriptions than CLIP's embedding
-    space alone. The tradeoff is we lose pixel-level similarity — we gain
+    space alone. The tradeoff is we lose pixel-level similarity; we gain
     semantic searchability.
     """
     path = Path(image_path)

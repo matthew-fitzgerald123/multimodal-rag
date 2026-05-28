@@ -1,0 +1,30 @@
+name: CI
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: multimodal_rag
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install fastapi uvicorn sqlalchemy psycopg2-binary chromadb sentence-transformers pydantic numpy pytest httpx python-dotenv Pillow python-multipart
+      - run: pytest tests/ -v
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost/multimodal_rag
+          MOCK_MODE: "true"
