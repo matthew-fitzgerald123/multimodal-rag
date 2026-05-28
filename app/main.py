@@ -28,7 +28,7 @@ def startup():
     print(f"Text chunks:  {vector_store.count('text')}")
     print(f"Image chunks: {vector_store.count('image')}")
 
-# Query
+# ── Query ─────────────────────────────────────────────────
 
 class QueryReq(BaseModel):
     query: str
@@ -39,7 +39,7 @@ class QueryReq(BaseModel):
 def query(req: QueryReq, db: Session = Depends(get_db)):
     total = vector_store.count()
     if total == 0:
-        raise HTTPException(400, "No documents indexed. Run: make ingest-docs and make ingest-images")
+        raise HTTPException(400, "No documents indexed — run: make ingest-docs and make ingest-images")
 
     chunks = vector_store.query(req.query, top_k=req.top_k, modality=req.modality)
     if not chunks:
@@ -48,11 +48,22 @@ def query(req: QueryReq, db: Session = Depends(get_db)):
     answer = generator.answer(req.query, chunks)
     modalities_used = list(set(c.get("modality", "text") for c in chunks))
 
+    # Simple faithfulness proxy
+    context_text = " ".join(c["text"] for c in chunks).lower()
+    answer_tokens = set(re.findall(r"\w+", answer.lower()))
+    context_tokens = set(re.findall(r"\w+", context_text))
+    stopwords = {"the","a","an","is","are","in","on","at","to","of","and","or","it","this","that"}
+    answer_tokens -= stopwords
+    faithfulness = round(
+        len(answer_tokens & context_tokens) / max(len(answer_tokens), 1), 4
+    )
+
     log = QueryLog(
         query=req.query,
         answer=answer,
         retrieved_ids=[c["chunk_id"] for c in chunks],
         modalities_used=modalities_used,
+        faithfulness=faithfulness,
     )
     db.add(log)
     db.commit()
@@ -62,15 +73,24 @@ def query(req: QueryReq, db: Session = Depends(get_db)):
         "answer":   answer,
         "chunks":   chunks,
         "modalities_used": modalities_used,
+        "eval": {
+            "faithfulness": faithfulness,
+            "text_chunks_retrieved":  sum(1 for c in chunks if c.get("modality") != "image"),
+            "image_chunks_retrieved": sum(1 for c in chunks if c.get("modality") == "image"),
+        },
     }
 
-# Image ingest
+# ── Image upload + ingest ─────────────────────────────────
 
 @app.post("/ingest/image", tags=["ingest"])
 async def ingest_image(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
+    """
+    Upload and ingest an image on the fly.
+    Captions it with mlx-lm and adds to the index immediately.
+    """
     suffix = Path(file.filename).suffix.lower()
     allowed = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
     if suffix not in allowed:
@@ -153,9 +173,77 @@ def ingest_text(
         "chunks_added": len(chunks),
     }
 
+# ── Monitoring ────────────────────────────────────────────
+
+@app.get("/index/stats", tags=["monitoring"])
+def index_stats():
+    return {
+        "total_chunks": vector_store.count(),
+        "text_chunks":  vector_store.count("text"),
+        "image_chunks": vector_store.count("image"),
+        "embed_model":  os.getenv("EMBED_MODEL"),
+        "gen_model":    os.getenv("GEN_MODEL"),
+    }
+
+@app.get("/documents", tags=["monitoring"])
+def list_documents(modality: str = None, limit: int = 20, db: Session = Depends(get_db)):
+    q = db.query(Document)
+    if modality:
+        q = q.filter_by(modality=modality)
+    docs = q.order_by(Document.created_at.desc()).limit(limit).all()
+    return [
+        {
+            "doc_id":   d.doc_id,
+            "title":    d.title,
+            "modality": d.modality,
+            "content":  d.content[:150] + "..." if len(d.content) > 150 else d.content,
+        }
+        for d in docs
+    ]
+
+@app.get("/query/history", tags=["monitoring"])
+def query_history(limit: int = 20, db: Session = Depends(get_db)):
+    logs = (
+        db.query(QueryLog)
+        .order_by(QueryLog.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "query":           l.query,
+            "answer":          l.answer[:200] + "..." if len(l.answer) > 200 else l.answer,
+            "modalities_used": l.modalities_used,
+            "faithfulness":    l.faithfulness,
+            "created_at":      str(l.created_at),
+        }
+        for l in logs
+    ]
+
+@app.get("/query/stats", tags=["monitoring"])
+def query_stats(db: Session = Depends(get_db)):
+    logs = db.query(QueryLog).all()
+    if not logs:
+        return {"message": "No queries yet"}
+    total = len(logs)
+    multimodal = sum(1 for l in logs if len(l.modalities_used or []) > 1)
+    avg_faith = round(
+        sum(l.faithfulness for l in logs if l.faithfulness) /
+        max(sum(1 for l in logs if l.faithfulness), 1), 4
+    )
+    return {
+        "total_queries":      total,
+        "multimodal_queries": multimodal,
+        "text_only_queries":  sum(1 for l in logs if l.modalities_used == ["text"]),
+        "image_only_queries": sum(1 for l in logs if l.modalities_used == ["image"]),
+        "avg_faithfulness":   avg_faith,
+    }
+
 @app.get("/health")
 def health():
     return {
-        "status":       "ok",
-        "model_loaded": generator.model is not None,
+        "status":        "ok",
+        "model_loaded":  generator.model is not None,
+        "text_chunks":   vector_store.count("text"),
+        "image_chunks":  vector_store.count("image"),
     }
