@@ -1,4 +1,5 @@
 from __future__ import annotations
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -20,13 +21,16 @@ Base.metadata.create_all(bind=engine)
 UPLOAD_DIR = Path("./data/images")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="Multimodal RAG", version="1.0.0")
 
-@app.on_event("startup")
-def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     generator.load_model()
     print(f"Text chunks:  {vector_store.count('text')}")
     print(f"Image chunks: {vector_store.count('image')}")
+    yield
+
+
+app = FastAPI(title="Multimodal RAG", version="1.0.0", lifespan=lifespan)
 
 # ── Query ─────────────────────────────────────────────────
 
