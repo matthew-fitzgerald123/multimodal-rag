@@ -72,6 +72,13 @@ class VectorStore:
         results = self.collection.get(where={"modality": modality})
         return len(results["ids"])
 
+    def delete_by_doc(self, doc_id: str) -> int:
+        results = self.collection.get(where={"doc_id": doc_id})
+        chunk_ids = results["ids"]
+        if chunk_ids:
+            self.collection.delete(ids=chunk_ids)
+        return len(chunk_ids)
+
     def reset(self):
         self.client.delete_collection("multimodal_docs")
         self.collection = self.client.get_or_create_collection(

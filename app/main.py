@@ -189,6 +189,22 @@ def index_stats():
         "gen_model":    os.getenv("GEN_MODEL"),
     }
 
+@app.delete("/documents/{doc_id}", tags=["ingest"])
+def delete_document(doc_id: str, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter_by(doc_id=doc_id).first()
+    if doc is None:
+        raise HTTPException(404, f"Document '{doc_id}' not found")
+
+    if doc.source_path:
+        path = Path(doc.source_path)
+        if path.exists():
+            path.unlink()
+
+    vector_store.delete_by_doc(doc_id)
+    db.delete(doc)
+    db.commit()
+    return {"doc_id": doc_id, "deleted": True}
+
 @app.get("/documents", tags=["monitoring"])
 def list_documents(modality: str = None, limit: int = 20, db: Session = Depends(get_db)):
     q = db.query(Document)

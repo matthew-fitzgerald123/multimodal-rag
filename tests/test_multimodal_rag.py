@@ -140,3 +140,22 @@ def test_query_stats():
     assert r.status_code == 200
     data = r.json()
     assert "total_queries" in data or "message" in data
+
+# ── Document deletion ──────────────────────────────────────
+
+def test_delete_document():
+    title = f"delete_test_{uuid.uuid4().hex[:8]}"
+    ingest_r = client.post(
+        "/ingest/text",
+        params={"title": title, "content": "Temporary document for deletion test."},
+    )
+    assert ingest_r.status_code == 200
+    doc_id = ingest_r.json()["doc_id"]
+
+    del_r = client.delete(f"/documents/{doc_id}")
+    assert del_r.status_code == 200
+    assert del_r.json() == {"doc_id": doc_id, "deleted": True}
+
+def test_delete_nonexistent_document():
+    r = client.delete("/documents/doesnotexist")
+    assert r.status_code == 404
