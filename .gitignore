@@ -24,6 +24,7 @@ venv/
 *.safetensors
 mlruns/
 chroma_db/
+data/images/
 
 # macOS
 .DS_Store

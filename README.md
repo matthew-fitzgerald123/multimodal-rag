@@ -98,6 +98,8 @@ chroma_db/             persistent ChromaDB storage
 notebooks/
   demo.py              end-to-end query demo
 tests/
+  test_multimodal_rag.py   API and retrieval pipeline tests
+  conftest.py              shared fixtures
 ```
 
 ## Notes
