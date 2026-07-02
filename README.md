@@ -59,6 +59,7 @@ Query supports `modality` filtering: `null` (all), `"text"`, or `"image"`.
 |---|---|---|
 | POST | `/ingest/text` | Ingest a text document by title + content |
 | POST | `/ingest/image` | Upload and caption an image (jpg/png/webp/gif) |
+| DELETE | `/documents/{doc_id}` | Remove a document and its chunks from the index |
 
 ### Monitoring
 
